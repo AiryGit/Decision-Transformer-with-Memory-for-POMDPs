@@ -120,6 +120,7 @@ class MemoryDecisionTransformer(nn.Module):
         self.n_embed = n_embed
         self.context_length = context_length
         self.memory_type = memory_type
+        self.memory_dim = memory_dim
         
         # (R,o,a) encoders
         self.state_encoder = nn.Linear(state_dim, n_embed)
@@ -131,9 +132,11 @@ class MemoryDecisionTransformer(nn.Module):
         # Memory module (optional)
         if memory_type == 'gru':
             # TODO: Implement GRU memory
+            self.memory = nn.GRU(n_embed, memory_dim, batch_first=True)
             self.memory_proj = nn.Linear(memory_dim, n_embed)
         elif memory_type == 'lstm':
             # TODO: Implement LSTM memory
+            self.memory = nn.LSTM(n_embed, memory_dim, batch_first=True)
             self.memory_proj = nn.Linear(memory_dim, n_embed)
         else:
             self.memory = None
@@ -186,11 +189,14 @@ class MemoryDecisionTransformer(nn.Module):
             if self.memory_type == 'gru':
                 if self.hidden_state is None:
                     # TODO: Implement GRU memory
+                    self.hidden_state = torch.zeros(1, batch_size, self.memory_dim)
                 
                 memory_out, self.hidden_state = self.memory(state_embeddings, self.hidden_state)
             elif self.memory_type == 'lstm':
                 if self.hidden_state is None:
                     # TODO: Implement LSTM memory
+                    self.hidden_state = (torch.zeros(1, batch_size, self.memory_dim),
+                                         torch.zeros(1, batch_size, self.memory_dim))
                 
                 memory_out, self.hidden_state = self.memory(state_embeddings, self.hidden_state)
             
